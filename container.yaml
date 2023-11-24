@@ -1,0 +1,47 @@
+- name: Dockerize redirection-serv for {{server_ip}}
+  hosts: all
+  tasks:
+    - name: Create Redirection Server Build Directory for {{server_ip}}
+      file:
+        path: ./redirection-server/redirection-serv
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+        recurse: yes
+
+    - name: copy Dockerfile for {{server_ip}}
+      copy:
+        src: ./Dockerfile
+        dest: ./redirection-server/redirection-serv/
+
+    - name: Copy redirection-serv files for {{server_ip}}
+      copy:
+        src: ./app_files
+        dest: ./redirection-server/redirection-serv/
+
+#    - name: substitue global vars for {{server_ip}}
+#      command: "{{ item }}"
+#      with_items:
+#        - sed -i 's/__mse_ip__/{{mse_ip}}/' ./redirection-server/redirection-serv/app_files/main.go
+
+    - name: Delete running redirection-serv container for {{server_ip}}
+      docker_container:
+        name: redirection-serv
+        force_kill: true
+        state: absent
+
+    - name: Remove old redirection-serv image for {{server_ip}}
+      docker_image:
+        state: absent
+        name: redirection-serv
+
+#    - name: create redirect_intra network for {{server_ip}}
+#      shell: docker network ls|grep redirect_intra || docker network create redirect_intra
+
+    - name: Build redirection-serv From Dockerfile for {{server_ip}}
+      command: docker build -t redirection-serv ./redirection-server/redirection-serv
+
+    - name: Running redirection-serv Container for {{server_ip}}
+      # command: sudo docker run -d --name redirection-serv -h redirection-serv -v /cont-shared/redirection-serv:/cont-shared -v /cont-shared/offer_images:/offer_images --net redirect_intra redirection-serv
+      command: sudo docker run -d --name redirection-serv -h redirection-serv -v /cont-shared/redirection-serv:/cont-shared -v /cont-shared/offer_images:/offer_images --net host redirection-serv
