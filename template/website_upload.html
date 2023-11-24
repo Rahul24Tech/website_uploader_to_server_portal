@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block portal_tab %}
+
+<style type="text/css" xmlns="http://www.w3.org/1999/html">
+                        table.dataTable tbody>tr.selected, table.dataTable tbody>tr>.selected {
+                                        background-color: #8eb874;
+                        }
+                        table.dataTable tbody>tr.selected .btn-outline-custom {
+                                        color: white;
+                        }
+                        .dataTables_scrollBody{
+                            height: calc(100vh - 600px) !important;
+                        }
+                        table.dataTable tbody>tr.selected, table.dataTable tbody>tr>.selected {
+            background-color: #8eb874;
+            }
+    table.dataTable tbody>tr.selected .btn-outline-custom {
+        color: white;
+    }
+    #view_tickets{
+        overflow: scroll;
+        max-height: 500px;
+    }
+    option:hover, option:checked {
+        background-color: #8da54a !important;
+        box-shadow: 0 0 10px 100px #28dd2f69 inset;
+    }
+    .form-row{
+        display: flex;
+    }
+    .col-form-label{
+        max-width:30%;
+        margin-right:10px;
+    }
+    .form-control{
+        width:100%;
+    }
+
+
+</style>
+
+
+<!-- success modal -->
+{{ create_modal.modal_header("Server response", "success_modal", False) }}
+<span></span>
+{{ create_modal.modal_footer() }}
+
+<!-- Error modal-->
+{{ create_modal.modal_header("Error message", "error_modal", False) }}
+<span></span>
+{{ create_modal.modal_footer() }}
+
+
+<div class="row">
+    <div class="col-lg-4">
+            <div class="card bg-transparent border-0">
+
+                <div class="card-header card-header-text bg-transparent border-0 ps-0">
+                    Website <strong>folder</strong>
+                </div>
+
+                <div class="card-body bg-white">
+<br>
+                    <form method="POST" enctype="multipart/form-data" autocomplete="off" id="upload_website_folder_form" action="/server/website_uploader/website" style="height:104px">
+
+                        <div class="col-6">
+
+                            <!-- <div class="input-group input-group-sm"> <label for="multiple_website_folder" class="input-group-text">select zip folder</label><input type="file" class="form-control" id="multiple_website_folder" name="multiple_website_folder[]" accept=".zip" style="visibility:hidden; max-width: 0px" onchange="console.log(this.files); $('#file_name_display').val(this.files)" multiple required />
+                            </div> -->
+
+                            <label class="form-label" for="multiple_website_folder">Select website folder (zip format only)</label>
+                            <input type="file" name="multiple_website_folder[]" accept=".zip" class="form-control" id="multiple_website_folder" />
+                        </div>
+
+                        <div class="col-6 mt-3">
+                            <button class="btn btn-sm btn-outline-custom">Upload</button>
+                            <button type="reset" value="Reset" class="btn btn-sm btn-outline-custom ms-1">Reset</button>
+                        </div>
+
+                    </form>
+                    <span id="submit_response"></span>
+                </div>
+
+            </div>
+    </div>
+
+
+
+
+    <div class="col-lg-8">
+        <form method="POST" enctype="multipart/form-data" autocomplete="off" id="server_website_config" action="/server/website_uploader/config">
+            <div class="card-header card-header-text bg-transparent border-0 ps-0"> <strong>Server </strong>website configuration </div>
+            <div>
+                <div id="servResponse" class="alert alert-success fade show" style="z-index: 10; position: absolute; right:0; display: none; padding-top: 5px; padding-bottom: 10px;"></div>
+
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" value="update_existing">
+                  <label class="form-check-label" for="flexRadioDefault1"> update existing </label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" value="override" checked>
+                  <label class="form-check-label" for="flexRadioDefault2"> override all previous configs </label>
+                </div>
+
+                <div class="card-body bg-white">
+                  <textarea class="form-control" id="server_input_textarea" name="server_input" rows="3" placeholder="plz enter line seperated format like --> server:domain:website" required></textarea>
+
+                  <button type="submit" class="btn btn-sm btn-outline-custom mt-2">Submit</button>
+
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+
+
+
+</div>
+
+<span id="submit_config_response"></span>
+
+<div class="row mt-2">
+    <div class="col-lg-12 pe-4">
+        <div class="card bg-transparent border-0">
+            <div class="card-header bg-transparent border-0 ps-0">
+                <strong>Website</strong> viewer
+            </div>
+
+            <div class="card-body bg-white" style="max-height:25%">
+                <div tab_id="0">
+                    <div class="mb-2">
+                        <div class="btn-group">
+                            {{ table_func.apply_show_hide_cols(tbl_cols+front_end_extra_cols,default_hidden_columns) }}
+
+                            <button class="ms-3 btn btn-sm btn-outline-custom" type="button"
+                                    id="clear_visible_filter_btn">Clear visible filters
+                            </button>
+                            <button class="ms-3 btn btn-sm btn-outline-custom" type="button" id="clear_all_filter_btn">
+                                Clear all filters
+                            </button>
+                        </div>
+                    </div>
+
+                    {{
+                    table_func.table_type_1_html("website_viewer-table",tbl_cols,front_end_extra_cols,tbl_col_schema,enumerate)
+                    }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+<!-- error modal -->
+{{ create_modal.modal_header("Error message", "error_modal", False) }}
+<span></span>
+{{ create_modal.modal_footer() }}
+
+<!-- success modal -->
+{{ create_modal.modal_header("Server response", "success_modal", False) }}
+    <span></span>
+{{ create_modal.modal_footer() }}
+
+
+{% block portal_tab_scripts %}
+<script type="text/javascript">
+
+         $(document).ready(function() {
+                        {% set columnDefs = [] %}
+
+                        {{ table_func.table_type_1_datatable_server_side(
+                                        "website_viewer-table",
+                                        tbl_cols,
+                                        front_end_extra_cols,
+                                        tbl_col_schema,
+                                        enumerate,
+                                        "/server/website_uploader/datatable",
+                                        columnDefs,
+                                        "website_id",
+                                        column_alias,
+                                        "true"
+                                        )
+                        }}
+
+                        {{ table_func.apply_show_hide("website_viewer-table", ".show-hide-tbl-col-choose input") }}
+                        {{ table_func.apply_clearing_of_filter("website_viewer-table", "#clear_visible_filter_btn", False) }}
+                        {{ table_func.apply_clearing_of_filter("website_viewer-table", "#clear_all_filter_btn", True) }}
+                });
+
+        $(document).ready(function() {
+
+            $("#upload_website_folder_form").submit(function(e) {
+                var table = $("#website_files_table").DataTable()
+                $('#submit_response').html("");
+                e.preventDefault();
+                console.log('-------------')
+                console.log($("#upload_website_folder_form").attr('action'))
+                console.log($("#upload_website_folder_form").attr('method'))
+                console.log('-------------')
+                // const form = $('#upload_website_folder_form')[0];
+                const formData = new FormData($(this)[0]);
+                console.log("typing to post form")
+                console.log(formData)
+                $.ajax({
+                    url: $("#upload_website_folder_form").attr('action'),
+                    type: $("#upload_website_folder_form").attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log(response)
+                        if (response.status == "fail") {
+                            // $('#submit_response').html('<span style="color: red">'+response.error+'</span>');
+                            $('#error_modal-modal-body span').text("Error: "+response.error);
+                            $('#error_modal-modal-toggle-btn').click();
+                        } else {
+                            // $('#submit_response').html('<span style="color: green">'+response.message+'</span>');
+                            $('#success_modal-modal-body span').html(response.message);
+                            $('#success_modal-modal-toggle-btn').click();
+                            $('#website_files_table').DataTable().ajax.reload();
+                            $("#upload_website_folder_form")[0].reset();
+                        }
+                    },
+                    error: function(response) {
+                        console.log(response)
+                        $('#error_modal-modal-body span').text("Unable to process your request !."+response.error);
+                        $('#error_modal-modal-toggle-btn').click();
+                    }
+                });
+            });
+
+
+            $("#server_website_config").submit(function(e) {
+
+      e.preventDefault();
+      console.log('-------------')
+      console.log($("#server_website_config").attr('action'))
+      console.log($("#server_website_config").attr('method'))
+      console.log('-------------')
+      const form = $('#server_website_config')[0];
+      const formData = new FormData(form);
+      console.log("typing to post form")
+      console.log(formData)
+      $.ajax({
+          url: $("#server_website_config").attr('action'),
+          type: $("#server_website_config").attr('method'),
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(response) {
+              console.log(response)
+              if (response.status == "fail") {
+                  // $('#submit_config_response').html('<span style="color: red">'+response.error+'</span>');
+                  $('#error_modal-modal-body span').text("Error: "+response.error);
+                  $('#error_modal-modal-toggle-btn').click();
+              } else {
+                  // $('#submit_config_response').html('<span style="color: green">'+response.message+'</span>');
+                  $('#success_modal-modal-body span').html(response.msg);
+                  $('#success_modal-modal-toggle-btn').click();
+                  $("#server_website_config")[0].reset();
+              }
+          },
+          error: function(response) {
+              console.log(response)
+              $('#error_modal-modal-body span').text("Unable to process your request !."+response.error);
+              $('#error_modal-modal-toggle-btn').click();
+          }
+      });
+  });
+});
+
+</script>
+{% endblock %}
